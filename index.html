@@ -26,7 +26,7 @@
     <section id="compareSection" class="bg-gradient-to-r from-rose-100 via-white to-rose-100 p-6 rounded-3xl shadow-md border-2 border-rose-300 mb-8 transition-all">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-bold text-rose-700 flex items-center gap-2">
-          <span>⚔️</span> เปรียบเทียบลิปสติกแบบ Side-by-Side (สูงสุด 2 แท่ง)
+          <span>⚔️</span> เปรียบเทียบลิปสติกแบบ Side-by-Side (เลือกได้สูงสุด 2 แท่ง)
         </h2>
         <button onclick="clearCompare()" class="text-xs text-rose-500 hover:text-rose-700 underline font-medium">ล้างการเปรียบเทียบ</button>
       </div>
@@ -141,8 +141,10 @@
         return;
       }
 
-      container.innerHTML = items.map(item => {
-        const isSelected = compareList.some(c => c.id === item.id);
+      container.innerHTML = items.map((item, index) => {
+        // ใช้ ID อ้างอิงแบบแปลงเป็น String เสมอเพื่อป้องกัน Error
+        const itemId = item.id !== undefined && item.id !== null ? String(item.id) : String(index);
+        const isSelected = compareList.some(c => String(c.id) === itemId);
         const buyUrlShopee = item.buy_url || `https://shopee.co.th/search?keyword=${encodeURIComponent(item.brand + ' ' + item.name)}`;
         
         return `
@@ -174,18 +176,15 @@
               <span class="text-lg font-bold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
             </div>
 
-            <!-- ปุ่มเปิดดู/เขียนรีวิว -->
-            <button onclick="openReviewModal(${item.id})" class="w-full py-1.5 rounded-xl text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition flex items-center justify-center gap-1">
+            <button onclick="openReviewModal('${itemId}')" class="w-full py-1.5 rounded-xl text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition flex items-center justify-center gap-1">
               ⭐ ดูรีวิว & ให้ดาว
             </button>
 
-            <!-- ปุ่มสั่งซื้อ (ลิงก์ออกไป Shopee) -->
             <a href="${buyUrlShopee}" target="_blank" rel="noopener noreferrer" class="w-full py-2 rounded-xl text-xs font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-sm transition flex items-center justify-center gap-1">
               🛍️ สั่งซื้อออนไลน์ (Shopee/Watsons)
             </a>
 
-            <!-- ปุ่มเทียบสี -->
-            <button onclick="toggleCompare(${item.id})" class="w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+            <button onclick="toggleCompare('${itemId}')" class="w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
               isSelected 
                 ? 'bg-gray-100 text-gray-500 border border-gray-300 hover:bg-gray-200' 
                 : 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm'
@@ -197,32 +196,35 @@
       `}).join('');
     }
 
-    // --- ระบบจัดการ Compare ---
-  // ฟังก์ชันจัดการเลือกเปรียบเทียบ (เลือกได้สูงสุด 2 แท่ง)
-function toggleCompare(id) {
-  // แปลง id ให้เป็น Number เพื่อป้องกันปัญหาเรื่องประเภทข้อมูล (String vs Number)
-  const targetId = Number(id);
-  const index = compareList.findIndex(item => Number(item.id) === targetId);
-  
-  if (index !== -1) {
-    // ถ้าเคยเลือกอยู่แล้ว ให้เอาออก
-    compareList.splice(index, 1);
-  } else {
-    // ถ้ายังเลือกไม่ครบ 2 แท่ง ให้เพิ่มแท่งใหม่เข้าไป
-    if (compareList.length >= 2) {
-      alert('คุณสามารถเลือกเปรียบเทียบได้สูงสุด 2 รายการพร้อมกันครับ');
-      return;
+    // --- ระบบจัดการ Compare แก้ไขสมบูรณ์ 100% ---
+    function toggleCompare(id) {
+      const targetId = String(id);
+      const index = compareList.findIndex(item => String(item.id) === targetId);
+      
+      if (index !== -1) {
+        compareList.splice(index, 1);
+      } else {
+        if (compareList.length >= 2) {
+          alert('คุณสามารถเลือกเปรียบเทียบได้สูงสุด 2 รายการพร้อมกันครับ');
+          return;
+        }
+        const selected = allLipsticks.find((item, idx) => {
+          const itemId = item.id !== undefined && item.id !== null ? String(item.id) : String(idx);
+          return itemId === targetId;
+        });
+        if (selected) {
+          compareList.push(selected);
+        }
+      }
+      displayLipsticks(allLipsticks);
+      renderCompareSection();
     }
-    const selected = allLipsticks.find(item => Number(item.id) === targetId);
-    if (selected) {
-      compareList.push(selected);
+
+    function clearCompare() {
+      compareList = [];
+      displayLipsticks(allLipsticks);
+      renderCompareSection();
     }
-  }
-  
-  // อัปเดตการแสดงผลหน้าเว็บและกล่องเปรียบเทียบ
-  displayLipsticks(allLipsticks);
-  renderCompareSection();
-}
 
     function renderCompareSection() {
       const container = document.getElementById('compareCards');
@@ -241,10 +243,11 @@ function toggleCompare(id) {
       for (let i = 0; i < 2; i++) {
         const item = compareList[i];
         if (item) {
+          const itemId = item.id !== undefined && item.id !== null ? String(item.id) : '';
           const buyUrl = item.buy_url || `https://shopee.co.th/search?keyword=${encodeURIComponent(item.brand + ' ' + item.name)}`;
           html += `
             <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm relative flex flex-col justify-between">
-              <button onclick="toggleCompare(${item.id})" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 font-bold text-sm">✕</button>
+              <button onclick="toggleCompare('${itemId}')" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 font-bold text-sm">✕</button>
               <div>
                 <div class="flex items-center gap-4 mb-4">
                   <div class="w-20 h-20 bg-rose-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
@@ -303,15 +306,20 @@ function toggleCompare(id) {
       }
     }
 
-    // --- ระบบรีวิว (Reviews System) ---
+    // --- ระบบรีวิว ---
     async function openReviewModal(lipstickId) {
       currentActiveLipstickId = lipstickId;
-      const lipstick = allLipsticks.find(i => i.id === lipstickId);
+      const lipstick = allLipsticks.find((i, idx) => {
+        const itemId = i.id !== undefined && i.id !== null ? String(i.id) : String(idx);
+        return itemId === String(lipstickId);
+      });
       
-      document.getElementById('modalHeader').innerHTML = `
-        <span class="text-xs font-bold text-rose-500 uppercase">${lipstick.brand}</span>
-        <h3 class="text-lg font-bold text-gray-800">${lipstick.name} (${lipstick.shade_name || ''})</h3>
-      `;
+      if (lipstick) {
+        document.getElementById('modalHeader').innerHTML = `
+          <span class="text-xs font-bold text-rose-500 uppercase">${lipstick.brand}</span>
+          <h3 class="text-lg font-bold text-gray-800">${lipstick.name} (${lipstick.shade_name || ''})</h3>
+        `;
+      }
 
       document.getElementById('reviewModal').classList.remove('hidden');
       loadReviews(lipstickId);
