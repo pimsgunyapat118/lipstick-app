@@ -4,39 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบเปรียบเทียบสีลิปสติกและราคา</title>
-  <!-- โหลด Tailwind CSS สำหรับแต่งหน้าเว็บให้สวยงาม -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- โหลด Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-rose-50/50 min-h-screen text-gray-800 pb-12">
 
-  <!-- Header / ส่วนหัว -->
-  <header class="bg-white border-b border-rose-100 shadow-sm sticky top-0 z-10">
-    <div class="max-w-6xl mx-auto px-4 py-5 flex justify-between items-center">
+  <!-- Header -->
+  <header class="bg-white border-b border-rose-100 shadow-sm sticky top-0 z-20">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <span class="text-2xl">💄</span>
         <h1 class="text-xl font-bold text-rose-600">Lipstick Match & Compare</h1>
       </div>
-      <p class="text-xs text-rose-400 bg-rose-50 px-3 py-1 rounded-full">AI & Web Project</p>
+      <p class="text-xs text-rose-400 bg-rose-50 px-3 py-1 rounded-full font-medium">Pro Comparison Edition</p>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 mt-8">
+  <main class="max-w-6xl mx-auto px-4 mt-6">
     
-    <!-- ส่วนตัวกรองข้อมูล / ค้นหา -->
+    <!-- 🥊 กล่องเปรียบเทียบ Side-by-Side (จะแสดงเมื่อมีรายการถูกเลือก) -->
+    <section id="compareSection" class="bg-gradient-to-r from-rose-100 via-white to-rose-100 p-6 rounded-3xl shadow-md border-2 border-rose-300 mb-8 transition-all">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-rose-700 flex items-center gap-2">
+          <span>⚔️</span> เปรียบเทียบลิปสติกแบบ Side-by-Side (เลือกได้สูงสุด 2 แท่ง)
+        </h2>
+        <button onclick="clearCompare()" class="text-xs text-rose-500 hover:text-rose-700 underline font-medium">ล้างการเปรียบเทียบ</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative" id="compareCards">
+        <!-- การ์ดเปรียบเทียบที่ 1 และ 2 จะถูกใส่เข้ามาตรงนี้ด้วย JavaScript -->
+      </div>
+
+      <!-- ส่วนสรุปส่วนต่างราคา -->
+      <div id="priceDiffBox" class="mt-4 p-3 bg-white/80 backdrop-blur rounded-xl text-center text-sm font-semibold text-rose-600 hidden border border-rose-200"></div>
+    </section>
+
+    <!-- ตัวกรองข้อมูล -->
     <section class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 mb-8">
-      <h2 class="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+      <h2 class="text-md font-semibold mb-3 text-gray-700 flex items-center gap-2">
         <span>🔍</span> ค้นหาและกรองสีลิปสติก
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">ค้นหายี่ห้อ / รุ่น / สี</label>
-          <input type="text" id="searchInput" oninput="filterLipsticks()" placeholder="พิมพ์ชื่อยี่ห้อ เช่น Rom&nd, Naree..." class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+          <input type="text" id="searchInput" oninput="filterLipsticks()" placeholder="พิมพ์ชื่อยี่ห้อ เช่น Rom&nd, Naree..." class="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">เนื้อสัมผัส (Finish)</label>
-          <select id="finishSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+          <select id="finishSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
             <option value="">ทั้งหมด</option>
             <option value="Tint">Tint</option>
             <option value="Matte">Matte / Velvet</option>
@@ -46,7 +61,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">เรียงตามราคา</label>
-          <select id="sortSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+          <select id="sortSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
             <option value="default">ปกติ</option>
             <option value="low-high">ราคา: น้อยไปมาก</option>
             <option value="high-low">ราคา: มากไปน้อย</option>
@@ -55,7 +70,7 @@
       </div>
     </section>
 
-    <!-- รายการลิปสติกแบบการ์ด -->
+    <!-- รายการลิปสติกทั้งหมด -->
     <section>
       <div id="loading" class="text-center py-12 text-rose-400 font-medium">กำลังโหลดข้อมูลลิปสติก...</div>
       <div id="lipstickList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 hidden"></div>
@@ -64,18 +79,16 @@
   </main>
 
   <script>
-    // 🛑 ใส่ค่า Project URL และ Key ของ Supabase ตรงนี้
-    const SUPABASE_URL = 'https://vwtunfmgqbfepztvvwog.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3dHVuZm1ncWJmZXB6dHZ2d29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMDgzMTMsImV4cCI6MjEwNjU4NDMxM30.2br7Y9-r4Lp7k8OwYhSqrTNwOkY1FQRLmeAQUQmziKw';
+    const SUPABASE_URL = 'https://vwtunfmgqbfepztvvwog.supabase.co'; // ใส่ Project URL ของเธอ
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3dHVuZm1ncWJmZXB6dHZ2d29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMDgzMTMsImV4cCI6MjEwNjU4NDMxM30.2br7Y9-r4Lp7k8OwYhSqrTNwOkY1FQRLmeAQUQmziKw'; // ใส่ anon Key ตัวยาวๆ ของเธอ
 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allLipsticks = [];
+    let compareList = []; // เก็บลิปสติกที่เลือกเปรียบเทียบ (สูงสุด 2 แท่ง)
 
-    // ดึงข้อมูลจาก Supabase
     async function fetchLipsticks() {
       const { data, error } = await _supabase.from('lipsticks').select('*');
       if (error) {
-        console.error('Error fetching data:', error);
         document.getElementById('loading').innerText = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
         return;
       }
@@ -83,9 +96,9 @@
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('lipstickList').classList.remove('hidden');
       displayLipsticks(allLipsticks);
+      renderCompareSection();
     }
 
-    // แสดงผลรายการลิปสติก
     function displayLipsticks(items) {
       const container = document.getElementById('lipstickList');
       if (items.length === 0) {
@@ -93,15 +106,15 @@
         return;
       }
 
-      container.innerHTML = items.map(item => `
+      container.innerHTML = items.map(item => {
+        const isSelected = compareList.some(c => c.id === item.id);
+        return `
         <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-rose-100 flex flex-col justify-between">
           <div>
             <div class="h-44 bg-rose-50 flex items-center justify-center relative overflow-hidden">
               ${item.image_url 
                 ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-full object-cover">`
-                : `<div class="w-20 h-20 rounded-full shadow-inner flex items-center justify-center text-white text-xs font-bold" style="background-color: ${item.shade_hex || '#e5e7eb'}">
-                     ${item.shade_hex ? '' : 'ไม่มีรูปภาพ'}
-                   </div>`
+                : `<div class="w-20 h-20 rounded-full shadow-inner flex items-center justify-center text-white text-xs font-bold" style="background-color: ${item.shade_hex || '#e5e7eb'}"></div>`
               }
               <span class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold text-gray-600 shadow-sm">
                 ${item.finish || 'Standard'}
@@ -118,15 +131,126 @@
             </div>
           </div>
           
-          <div class="p-4 pt-0 border-t border-gray-50 mt-2 flex justify-between items-center">
-            <span class="text-xs text-gray-400">ราคาประมาณ</span>
-            <span class="text-lg font-bold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
+          <div class="p-4 pt-0 border-t border-gray-50 mt-2">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs text-gray-400">ราคา</span>
+              <span class="text-lg font-bold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
+            </div>
+            <button onclick="toggleCompare(${item.id})" class="w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+              isSelected 
+                ? 'bg-gray-100 text-gray-500 border border-gray-300 hover:bg-gray-200' 
+                : 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm shadow-rose-200'
+            }">
+              ${isSelected ? '✓ เลือกแล้ว (ยกเลิก)' : '➕ เลือกเปรียบเทียบ'}
+            </button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
-    // กรองและค้นหา
+    // เพิ่ม/เอาออก จากรายการเปรียบเทียบ
+    function toggleCompare(id) {
+      const index = compareList.findIndex(item => item.id === id);
+      if (index !== -1) {
+        compareList.splice(index, 1);
+      } else {
+        if (compareList.length >= 2) {
+          alert('คุณสามารถเลือกเปรียบเทียบได้สูงสุด 2 รายการพร้อมกันครับ');
+          return;
+        }
+        const selected = allLipsticks.find(item => item.id === id);
+        if (selected) compareList.push(selected);
+      }
+      displayLipsticks(allLipsticks);
+      renderCompareSection();
+    }
+
+    function clearCompare() {
+      compareList = [];
+      displayLipsticks(allLipsticks);
+      renderCompareSection();
+    }
+
+    // แสดงผลกล่อง Side-by-Side Compare
+    function renderCompareSection() {
+      const container = document.getElementById('compareCards');
+      const diffBox = document.getElementById('priceDiffBox');
+
+      if (compareList.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-8 text-gray-400 text-sm">
+            👇 กดปุ่ม <span class="font-bold text-rose-500">"➕ เลือกเปรียบเทียบ"</span> บนลิปสติกที่ต้องการเทียบสีและราคา
+          </div>`;
+        diffBox.classList.add('hidden');
+        return;
+      }
+
+      let html = '';
+      for (let i = 0; i < 2; i++) {
+        const item = compareList[i];
+        if (item) {
+          html += `
+            <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm relative flex flex-col justify-between">
+              <button onclick="toggleCompare(${item.id})" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 font-bold text-sm">✕</button>
+              <div>
+                <div class="flex items-center gap-4 mb-4">
+                  <div class="w-20 h-20 bg-rose-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                    ${item.image_url 
+                      ? `<img src="${item.image_url}" class="w-full h-full object-cover">`
+                      : `<div class="w-full h-full" style="background-color: ${item.shade_hex || '#ccc'}"></div>`
+                    }
+                  </div>
+                  <div>
+                    <span class="text-xs font-bold text-rose-500 uppercase">${item.brand}</span>
+                    <h4 class="font-bold text-gray-800 text-base">${item.name}</h4>
+                    <p class="text-xs text-gray-500">${item.finish || '-'}</p>
+                  </div>
+                </div>
+
+                <div class="space-y-2 bg-rose-50/50 p-3 rounded-xl border border-rose-100 text-xs">
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-500">เฉดสี:</span>
+                    <div class="flex items-center gap-1.5 font-medium">
+                      <span class="w-4 h-4 rounded-full border border-gray-300" style="background-color: ${item.shade_hex || '#ccc'}"></span>
+                      <span>${item.shade_name || 'ไม่ระบุ'}</span>
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-500">รหัสสี (HEX):</span>
+                    <span class="font-mono bg-white px-2 py-0.5 rounded border border-gray-200">${item.shade_hex || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+                <span class="text-xs text-gray-400">ราคา</span>
+                <span class="text-xl font-extrabold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="border-2 border-dashed border-rose-200 rounded-2xl p-8 text-center flex flex-col items-center justify-center text-rose-300">
+              <span class="text-3xl mb-1">➕</span>
+              <span class="text-xs font-medium">เลือกอีก 1 แท่งมาเทียบกัน</span>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = html;
+
+      // คานวนส่วนต่างราคาถ้าเลือกครบ 2 แท่ง
+      if (compareList.length === 2) {
+        const diff = Math.abs(compareList[0].price - compareList[1].price);
+        const cheaper = compareList[0].price < compareList[1].price ? compareList[0] : compareList[1];
+        diffBox.classList.remove('hidden');
+        diffBox.innerHTML = `💡 <span class="font-bold">${cheaper.brand} - ${cheaper.name}</span> ราคาถูกกว่าอีกแท่งอยู่ <span class="text-lg font-extrabold text-emerald-600">฿${diff.toLocaleString()}</span> บาท`;
+      } else {
+        diffBox.classList.add('hidden');
+      }
+    }
+
     function filterLipsticks() {
       const search = document.getElementById('searchInput').value.toLowerCase();
       const finish = document.getElementById('finishSelect').value;
@@ -149,7 +273,6 @@
       displayLipsticks(filtered);
     }
 
-    // เริ่มทำงานเมื่อโหลดหน้าเว็บ
     fetchLipsticks();
   </script>
 </body>
