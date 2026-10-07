@@ -3,39 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบเปรียบเทียบสีลิปสติกและราคา</title>
+  <title>ระบบเปรียบเทียบสีลิปสติก รีวิว และสั่งซื้อ</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-rose-50/50 min-h-screen text-gray-800 pb-12">
+<body class="bg-rose-50/50 min-h-screen text-gray-800 pb-16">
 
   <!-- Header -->
   <header class="bg-white border-b border-rose-100 shadow-sm sticky top-0 z-20">
     <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <span class="text-2xl">💄</span>
-        <h1 class="text-xl font-bold text-rose-600">Lipstick Match & Compare</h1>
+        <h1 class="text-xl font-bold text-rose-600">Lipstick Match, Compare & Review</h1>
       </div>
-      <p class="text-xs text-rose-400 bg-rose-50 px-3 py-1 rounded-full font-medium">Pro Comparison Edition</p>
+      <p class="text-xs text-rose-400 bg-rose-50 px-3 py-1 rounded-full font-medium">Ultimate E-Commerce Edition</p>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto px-4 mt-6">
     
-    <!-- 🥊 กล่องเปรียบเทียบ Side-by-Side (จะแสดงเมื่อมีรายการถูกเลือก) -->
+    <!-- 🥊 กล่องเปรียบเทียบ Side-by-Side -->
     <section id="compareSection" class="bg-gradient-to-r from-rose-100 via-white to-rose-100 p-6 rounded-3xl shadow-md border-2 border-rose-300 mb-8 transition-all">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-bold text-rose-700 flex items-center gap-2">
-          <span>⚔️</span> เปรียบเทียบลิปสติกแบบ Side-by-Side (เลือกได้สูงสุด 2 แท่ง)
+          <span>⚔️</span> เปรียบเทียบลิปสติกแบบ Side-by-Side (สูงสุด 2 แท่ง)
         </h2>
         <button onclick="clearCompare()" class="text-xs text-rose-500 hover:text-rose-700 underline font-medium">ล้างการเปรียบเทียบ</button>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative" id="compareCards">
-        <!-- การ์ดเปรียบเทียบที่ 1 และ 2 จะถูกใส่เข้ามาตรงนี้ด้วย JavaScript -->
-      </div>
-
-      <!-- ส่วนสรุปส่วนต่างราคา -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="compareCards"></div>
       <div id="priceDiffBox" class="mt-4 p-3 bg-white/80 backdrop-blur rounded-xl text-center text-sm font-semibold text-rose-600 hidden border border-rose-200"></div>
     </section>
 
@@ -78,13 +73,53 @@
 
   </main>
 
+  <!-- Modal ป๊อปอัปสำหรับดูรีวิวและเขียนรีวิว -->
+  <div id="reviewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+      
+      <div id="modalHeader" class="mb-4"></div>
+
+      <!-- ฟอร์มเขียนรีวิว -->
+      <form onsubmit="submitReview(event)" class="bg-rose-50/60 p-4 rounded-2xl mb-6 border border-rose-100">
+        <h4 class="text-xs font-bold text-rose-600 mb-2">✍️ เขียนรีวิวของคุณ</h4>
+        <div class="space-y-3">
+          <div>
+            <input type="text" id="reviewerName" required placeholder="ชื่อของคุณ" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-400">
+          </div>
+          <div>
+            <label class="block text-[11px] text-gray-500 mb-1">ให้คะแนน:</label>
+            <select id="reviewRating" class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-400">
+              <option value="5">⭐⭐⭐⭐⭐ (5/5 ประทับใจมาก)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5 ดีมาก)</option>
+              <option value="3">⭐⭐⭐ (3/5 ปานกลาง)</option>
+              <option value="2">⭐⭐ (2/5 พอใช้)</option>
+              <option value="1">⭐ (1/5 ต้องปรับปรุง)</option>
+            </select>
+          </div>
+          <div>
+            <textarea id="reviewComment" required rows="2" placeholder="ความรู้สึกหลังใช้/ความติดทน..." class="w-full border border-gray-200 rounded-xl px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-rose-500 text-white font-bold py-2 rounded-xl text-xs hover:bg-rose-600 shadow-sm transition">ส่งรีวิว</button>
+        </div>
+      </form>
+
+      <!-- รายการรีวิวที่มีอยู่ -->
+      <div>
+        <h4 class="text-xs font-bold text-gray-700 mb-3">💬 รีวิวจากผู้ใช้จริง</h4>
+        <div id="modalReviewsList" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const SUPABASE_URL = 'https://vwtunfmgqbfepztvvwog.supabase.co'; // ใส่ Project URL ของเธอ
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3dHVuZm1ncWJmZXB6dHZ2d29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMDgzMTMsImV4cCI6MjEwNjU4NDMxM30.2br7Y9-r4Lp7k8OwYhSqrTNwOkY1FQRLmeAQUQmziKw'; // ใส่ anon Key ตัวยาวๆ ของเธอ
+    const SUPABASE_URL = 'https://vwtunfmgqbfepztvvwog.supabase.co'; // ใส่ Project URL
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3dHVuZm1ncWJmZXB6dHZ2d29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMDgzMTMsImV4cCI6MjEwNjU4NDMxM30.2br7Y9-r4Lp7k8OwYhSqrTNwOkY1FQRLmeAQUQmziKw'; // ใส่ anon Key ตัวยาวๆ
 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allLipsticks = [];
-    let compareList = []; // เก็บลิปสติกที่เลือกเปรียบเทียบ (สูงสุด 2 แท่ง)
+    let compareList = [];
+    let currentActiveLipstickId = null;
 
     async function fetchLipsticks() {
       const { data, error } = await _supabase.from('lipsticks').select('*');
@@ -108,6 +143,8 @@
 
       container.innerHTML = items.map(item => {
         const isSelected = compareList.some(c => c.id === item.id);
+        const buyUrlShopee = item.buy_url || `https://shopee.co.th/search?keyword=${encodeURIComponent(item.brand + ' ' + item.name)}`;
+        
         return `
         <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-rose-100 flex flex-col justify-between">
           <div>
@@ -131,15 +168,27 @@
             </div>
           </div>
           
-          <div class="p-4 pt-0 border-t border-gray-50 mt-2">
-            <div class="flex justify-between items-center mb-3">
+          <div class="p-4 pt-0 border-t border-gray-50 mt-2 space-y-2">
+            <div class="flex justify-between items-center">
               <span class="text-xs text-gray-400">ราคา</span>
               <span class="text-lg font-bold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
             </div>
+
+            <!-- ปุ่มเปิดดู/เขียนรีวิว -->
+            <button onclick="openReviewModal(${item.id})" class="w-full py-1.5 rounded-xl text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition flex items-center justify-center gap-1">
+              ⭐ ดูรีวิว & ให้ดาว
+            </button>
+
+            <!-- ปุ่มสั่งซื้อ (ลิงก์ออกไป Shopee) -->
+            <a href="${buyUrlShopee}" target="_blank" rel="noopener noreferrer" class="w-full py-2 rounded-xl text-xs font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-sm transition flex items-center justify-center gap-1">
+              🛍️ สั่งซื้อออนไลน์ (Shopee/Watsons)
+            </a>
+
+            <!-- ปุ่มเทียบสี -->
             <button onclick="toggleCompare(${item.id})" class="w-full py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
               isSelected 
                 ? 'bg-gray-100 text-gray-500 border border-gray-300 hover:bg-gray-200' 
-                : 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm shadow-rose-200'
+                : 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm'
             }">
               ${isSelected ? '✓ เลือกแล้ว (ยกเลิก)' : '➕ เลือกเปรียบเทียบ'}
             </button>
@@ -148,7 +197,7 @@
       `}).join('');
     }
 
-    // เพิ่ม/เอาออก จากรายการเปรียบเทียบ
+    // --- ระบบจัดการ Compare ---
     function toggleCompare(id) {
       const index = compareList.findIndex(item => item.id === id);
       if (index !== -1) {
@@ -171,7 +220,6 @@
       renderCompareSection();
     }
 
-    // แสดงผลกล่อง Side-by-Side Compare
     function renderCompareSection() {
       const container = document.getElementById('compareCards');
       const diffBox = document.getElementById('priceDiffBox');
@@ -189,6 +237,7 @@
       for (let i = 0; i < 2; i++) {
         const item = compareList[i];
         if (item) {
+          const buyUrl = item.buy_url || `https://shopee.co.th/search?keyword=${encodeURIComponent(item.brand + ' ' + item.name)}`;
           html += `
             <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm relative flex flex-col justify-between">
               <button onclick="toggleCompare(${item.id})" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 font-bold text-sm">✕</button>
@@ -223,7 +272,7 @@
               </div>
 
               <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-                <span class="text-xs text-gray-400">ราคา</span>
+                <a href="${buyUrl}" target="_blank" class="text-xs text-orange-600 font-bold hover:underline">🛍️ สั่งซื้อแท่งนี้</a>
                 <span class="text-xl font-extrabold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
               </div>
             </div>
@@ -240,7 +289,6 @@
 
       container.innerHTML = html;
 
-      // คานวนส่วนต่างราคาถ้าเลือกครบ 2 แท่ง
       if (compareList.length === 2) {
         const diff = Math.abs(compareList[0].price - compareList[1].price);
         const cheaper = compareList[0].price < compareList[1].price ? compareList[0] : compareList[1];
@@ -249,6 +297,71 @@
       } else {
         diffBox.classList.add('hidden');
       }
+    }
+
+    // --- ระบบรีวิว (Reviews System) ---
+    async function openReviewModal(lipstickId) {
+      currentActiveLipstickId = lipstickId;
+      const lipstick = allLipsticks.find(i => i.id === lipstickId);
+      
+      document.getElementById('modalHeader').innerHTML = `
+        <span class="text-xs font-bold text-rose-500 uppercase">${lipstick.brand}</span>
+        <h3 class="text-lg font-bold text-gray-800">${lipstick.name} (${lipstick.shade_name || ''})</h3>
+      `;
+
+      document.getElementById('reviewModal').classList.remove('hidden');
+      loadReviews(lipstickId);
+    }
+
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.add('hidden');
+      currentActiveLipstickId = null;
+    }
+
+    async function loadReviews(lipstickId) {
+      const container = document.getElementById('modalReviewsList');
+      container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">กำลังโหลดรีวิว...</p>`;
+
+      const { data, error } = await _supabase
+        .from('reviews')
+        .select('*')
+        .eq('lipstick_id', lipstickId)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีรีวิวสำหรับลิปรุ่นนี้ เป็นคนแรกที่รีวิวเลย!</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(r => `
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-gray-700">${r.user_name}</span>
+            <span class="text-amber-500">${'⭐'.repeat(r.rating)}</span>
+          </div>
+          <p class="text-gray-600">${r.comment}</p>
+        </div>
+      `).join('');
+    }
+
+    async function submitReview(e) {
+      e.preventDefault();
+      const name = document.getElementById('reviewerName').value;
+      const rating = Number(document.getElementById('reviewRating').value);
+      const comment = document.getElementById('reviewComment').value;
+
+      const { error } = await _supabase.from('reviews').insert([
+        { lipstick_id: currentActiveLipstickId, user_name: name, rating: rating, comment: comment }
+      ]);
+
+      if (error) {
+        alert('เกิดข้อผิดพลาด ไม่สามารถส่งรีวิวได้');
+        return;
+      }
+
+      document.getElementById('reviewerName').value = '';
+      document.getElementById('reviewComment').value = '';
+      loadReviews(currentActiveLipstickId);
     }
 
     function filterLipsticks() {
