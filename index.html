@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบเปรียบเทียบสีลิปสติกและราคา</title>
+  <!-- โหลด Tailwind CSS สำหรับแต่งหน้าเว็บให้สวยงาม -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- โหลด Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-rose-50/50 min-h-screen text-gray-800 pb-12">
+
+  <!-- Header / ส่วนหัว -->
+  <header class="bg-white border-b border-rose-100 shadow-sm sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-4 py-5 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">💄</span>
+        <h1 class="text-xl font-bold text-rose-600">Lipstick Match & Compare</h1>
+      </div>
+      <p class="text-xs text-rose-400 bg-rose-50 px-3 py-1 rounded-full">AI & Web Project</p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 mt-8">
+    
+    <!-- ส่วนตัวกรองข้อมูล / ค้นหา -->
+    <section class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 mb-8">
+      <h2 class="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
+        <span>🔍</span> ค้นหาและกรองสีลิปสติก
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">ค้นหายี่ห้อ / รุ่น / สี</label>
+          <input type="text" id="searchInput" oninput="filterLipsticks()" placeholder="พิมพ์ชื่อยี่ห้อ เช่น Rom&nd, Naree..." class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">เนื้อสัมผัส (Finish)</label>
+          <select id="finishSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+            <option value="">ทั้งหมด</option>
+            <option value="Tint">Tint</option>
+            <option value="Matte">Matte / Velvet</option>
+            <option value="Gloss">Gloss</option>
+            <option value="Balm">Balm</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">เรียงตามราคา</label>
+          <select id="sortSelect" onchange="filterLipsticks()" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+            <option value="default">ปกติ</option>
+            <option value="low-high">ราคา: น้อยไปมาก</option>
+            <option value="high-low">ราคา: มากไปน้อย</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- รายการลิปสติกแบบการ์ด -->
+    <section>
+      <div id="loading" class="text-center py-12 text-rose-400 font-medium">กำลังโหลดข้อมูลลิปสติก...</div>
+      <div id="lipstickList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 hidden"></div>
+    </section>
+
+  </main>
+
+  <script>
+    // 🛑 ใส่ค่า Project URL และ Key ของ Supabase ตรงนี้
+    const SUPABASE_URL = 'https://vwtunfmgqbfepztvvwog.supabase.co/rest/v1/';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3dHVuZm1ncWJmZXB6dHZ2d29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMDgzMTMsImV4cCI6MjEwNjU4NDMxM30.2br7Y9-r4Lp7k8OwYhSqrTNwOkY1FQRLmeAQUQmziKw';
+
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let allLipsticks = [];
+
+    // ดึงข้อมูลจาก Supabase
+    async function fetchLipsticks() {
+      const { data, error } = await _supabase.from('lipsticks').select('*');
+      if (error) {
+        console.error('Error fetching data:', error);
+        document.getElementById('loading').innerText = 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+        return;
+      }
+      allLipsticks = data;
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('lipstickList').classList.remove('hidden');
+      displayLipsticks(allLipsticks);
+    }
+
+    // แสดงผลรายการลิปสติก
+    function displayLipsticks(items) {
+      const container = document.getElementById('lipstickList');
+      if (items.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400">ไม่พบลิปสติกที่ค้นหา</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-rose-100 flex flex-col justify-between">
+          <div>
+            <div class="h-44 bg-rose-50 flex items-center justify-center relative overflow-hidden">
+              ${item.image_url 
+                ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-full object-cover">`
+                : `<div class="w-20 h-20 rounded-full shadow-inner flex items-center justify-center text-white text-xs font-bold" style="background-color: ${item.shade_hex || '#e5e7eb'}">
+                     ${item.shade_hex ? '' : 'ไม่มีรูปภาพ'}
+                   </div>`
+              }
+              <span class="absolute top-3 right-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold text-gray-600 shadow-sm">
+                ${item.finish || 'Standard'}
+              </span>
+            </div>
+            <div class="p-4">
+              <span class="text-xs font-bold text-rose-500 uppercase tracking-wide">${item.brand}</span>
+              <h3 class="font-semibold text-gray-800 text-base mt-0.5 line-clamp-1">${item.name}</h3>
+              
+              <div class="flex items-center gap-2 mt-3">
+                <span class="w-5 h-5 rounded-full border border-gray-200 shadow-sm flex-shrink-0" style="background-color: ${item.shade_hex || '#ccc'}"></span>
+                <span class="text-xs text-gray-600 truncate">${item.shade_name || 'ไม่ระบุสี'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-4 pt-0 border-t border-gray-50 mt-2 flex justify-between items-center">
+            <span class="text-xs text-gray-400">ราคาประมาณ</span>
+            <span class="text-lg font-bold text-rose-600">฿${Number(item.price).toLocaleString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // กรองและค้นหา
+    function filterLipsticks() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const finish = document.getElementById('finishSelect').value;
+      const sort = document.getElementById('sortSelect').value;
+
+      let filtered = allLipsticks.filter(item => {
+        const matchesSearch = item.brand.toLowerCase().includes(search) || 
+                              item.name.toLowerCase().includes(search) || 
+                              (item.shade_name && item.shade_name.toLowerCase().includes(search));
+        const matchesFinish = finish === '' || (item.finish && item.finish.toLowerCase().includes(finish.toLowerCase()));
+        return matchesSearch && matchesFinish;
+      });
+
+      if (sort === 'low-high') {
+        filtered.sort((a, b) => Number(a.price) - Number(b.price));
+      } else if (sort === 'high-low') {
+        filtered.sort((a, b) => Number(b.price) - Number(a.price));
+      }
+
+      displayLipsticks(filtered);
+    }
+
+    // เริ่มทำงานเมื่อโหลดหน้าเว็บ
+    fetchLipsticks();
+  </script>
+</body>
+</html>
